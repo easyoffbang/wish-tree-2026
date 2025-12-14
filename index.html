@@ -61,6 +61,7 @@
     /* ⭐ 별 반짝임 */
     .star-glow {
       position: absolute;
+      z-index: 3;
       top: 13%;
       left: 50%;
       transform: translateX(-50%);
@@ -80,6 +81,7 @@
     /* 안내 문구 */
     .hint {
       position: absolute;
+      z-index: 6;
       left: 50%;
       bottom: 12px;
       transform: translateX(-50%);
@@ -152,7 +154,8 @@
     }
 
   @media (max-width: 520px) {
-  .ornament { --base: 10%; } /* 기존 11% → 10% */
+    .ornament { --base: 10%; } /* 기존 11% → 10% */
+    .hint { max-width: calc(100% - 28px); }
     }
 
 
@@ -241,9 +244,9 @@
 
     /* ❄️ 눈송이 레이어 (아주 약하게) */
     .snow {
-      position: fixed;
+      position: absolute;
       inset: 0;
-      z-index: 8;           /* 카드 아래/위 중 선택: 카드 위에 살짝 보이게 */
+      z-index: 4;           /* 카드 아래/위 중 선택: 카드 위에 살짝 보이게 */
       pointer-events: none;
       overflow: hidden;
     }
@@ -333,7 +336,7 @@
         const flake = document.createElement("i");
 
         // 랜덤 위치
-        flake.style.left = (Math.random() * 100) + "vw";
+        flake.style.left = (Math.random() * 100) + "%";
 
         // 속도: 8초 이상 (8~14초)
         const dur = 8 + Math.random() * 6;
