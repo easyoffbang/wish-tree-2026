@@ -89,6 +89,11 @@
       box-shadow: 0 8px 18px rgba(0,0,0,0.12);
       backdrop-filter: blur(6px);
       user-select: none;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
     }
 
 
@@ -141,7 +146,12 @@
   0%   { transform: scale(1.00); }
   40%  { transform: scale(1.06); } /* 80ms 체감용 */
   100% { transform: scale(1.00); }
-}
+    }
+
+  @media (max-width: 520px) {
+  .ornament { --base: 10%; } /* 기존 11% → 10% */
+    }
+
 
     /* 클릭 순간에만 적용 */
     .ornament.tapped {
@@ -291,7 +301,7 @@
   { img:"orn6.png",  top:55, left:28, mTop:55, mLeft:30, owner:"가영",  wish:"적게 일하고 많이 벌래요! 롱디는 이제 그만 부산에서 살래요!" },
   { img:"orn7.png",  top:55, left:55, mTop:55, mLeft:55, owner:"병협",  wish:"26년에는 더 강한 간을 갖게 해주세요" },
   { img:"orn12.png", top:50, left:60, mTop:51, mLeft:58, owner:"민지", wish:"도전적이고 인상적인 경험을 쌓는 한해가 되길" },
-  { img:"orn15.png", top:53, left:75, mTop:53, mLeft:66, owner:"진화", wish:"- 26년에도 가족들, 동기들 모두 건강하게 해주세요." },
+  { img:"orn15.png", top:53, left:75, mTop:53, mLeft:66, owner:"진화", wish:"26년에도 가족들, 동기들 모두 건강하게 해주세요." },
 
   { img:"orn9.png",  top:65, left:23, mTop:64, mLeft:26, owner:"형창",  wish:"주식 대박나게 해주세요!" },
   { img:"orn10.png", top:58, left:41, mTop:60, mLeft:42, owner:"동현", wish:"우리 가족 함께 행복하구 건강하게 지내기" },
