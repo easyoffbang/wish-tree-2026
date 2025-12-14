@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>26년 오월이들 소원트리</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #ffe8c9 0%, #f9c0d5 30%, #7c8ad3 65%, #232644 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                   "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+    }
+
+    /* 오일파스텔 질감 */
+    .overlay-noise {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12' /%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+      z-index: 1;
+    }
+
+    /* 카드 */
+    .card {
+      position: relative;
+      z-index: 2;
+      width: min(480px, 92vw);
+      aspect-ratio: 9 / 16;
+      border-radius: 28px;
+      background: #fffdf8;
+      overflow: hidden;
+      box-shadow:
+        0 18px 40px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(255,255,255,0.8) inset;
+    }
+
+    .tree-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .tree-container img.tree {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ⭐ 별 반짝임 */
+    .star-glow {
+      position: absolute;
+      top: 13%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(255,255,255,1) 0%,
+        rgba(255,245,180,0.9) 35%,
+        rgba(255,245,180,0.3) 60%,
+        rgba(255,245,180,0) 75%);
+      mix-blend-mode: screen;
+      animation: starPulse 3s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    /* 안내 문구 */
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: rgba(90, 70, 60, 0.82);
+      background: rgba(255, 250, 242, 0.72);
+      border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+      backdrop-filter: blur(6px);
+      user-select: none;
+    }
+
+
+    @keyframes starPulse {
+    from { transform: translateX(-50%) scale(0.95) rotate(-2deg); opacity: 0.82; }
+    to   { transform: translateX(-50%) scale(1.06) rotate(2deg); opacity: 1; }
+    }
+
+
+/* 🎄 오너먼트 (PNG 그대로 보이게 + 개별 크기 지원) */
+    .ornament {
+    position: absolute;
+
+    /* ✅ 개별 크기 조절용 */
+    --base: 11%;
+    --scale: 1;
+    width: calc(var(--base) * var(--scale));
+
+    cursor: pointer;
+    animation: float 3.5s ease-in-out infinite alternate;
+    transition: transform 0.15s ease;
+    }
+
+
+    .ornament:hover {
+      transform: scale(1.08) translateY(-4px);
+    }
+
+    /* PNG 이미지 자체 */
+    .ornament img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)); /* 예쁜 그림자만 유지 */
+    /* 클릭(선택)된 오너먼트 강조 */
+    }
+    .ornament.active img {
+      filter: brightness(1.18) drop-shadow(0 7px 16px rgba(0,0,0,0.45));
+      transform: scale(1.06);
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    /* 흔들림 */
+  @keyframes float {
+    from { transform: translateY(0) rotate(-1.2deg); }
+    to   { transform: translateY(-4px) rotate(1.2deg); }
+  }
+
+  @keyframes tapPulse {
+  0%   { transform: scale(1.00); }
+  40%  { transform: scale(1.06); } /* 80ms 체감용 */
+  100% { transform: scale(1.00); }
+}
+
+    /* 클릭 순간에만 적용 */
+    .ornament.tapped {
+      animation: tapPulse 120ms ease-out;
+    }
+
+    /* 💌 소원 팝업 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(20,10,30,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .modal {
+      position: relative;
+      background: #fff6e3; /* 종이색 유지 */
+      border-radius: 20px;
+      padding: 18px 20px;
+      max-width: 320px;
+      overflow: hidden; /* 노이즈 레이어 잘라내기 */
+      border: 1px solid rgba(140, 110, 90, 0.10);
+      box-shadow:
+        0 14px 30px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(255,255,255,0.55) inset,
+        0 10px 18px rgba(70, 40, 20, 0.10);
+    }
+
+    /* 아주 약한 종이 노이즈(팝업 위에만) - 눈에 보이게 튜닝 */
+    .modal::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+
+      /* 종이 결(노이즈) */
+      background-image:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.55), rgba(255,255,255,0) 55%),
+      radial-gradient(circle at 80% 85%, rgba(120,90,70,0.08), rgba(120,90,70,0) 60%),
+      url("data:image/svg+xml,%3Csvg width='240' height='240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35' /%3E%3C/svg%3E");
+
+      background-repeat: repeat;
+
+      opacity: 0.16;
+      mix-blend-mode: soft-light;
+      filter: contrast(110%) brightness(102%);
+
+
+      pointer-events: none;
+    }
+
+
+    /* 내용이 노이즈 위로 오게 */
+    .modal > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .modal h2 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: #7b4f3b;
+    }
+
+    .modal p {
+      margin: 0;
+      font-size: 14px;
+      color: #4b3a34;
+      white-space: pre-wrap;
+    }
+
+    .modal button {
+      margin-top: 12px;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      background: linear-gradient(135deg, #ffcf93, #ff8c8c);
+      cursor: pointer;
+      float: right;
+    }
+
+    /* ❄️ 눈송이 레이어 (아주 약하게) */
+    .snow {
+      position: fixed;
+      inset: 0;
+      z-index: 2;           /* 카드 아래/위 중 선택: 카드 위에 살짝 보이게 */
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .snow i {
+      position: absolute;
+      top: -10%;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15); /* ✅ opacity 0.15 준수 */
+      filter: blur(0.2px);
+      animation-name: snowFall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    @keyframes snowFall {
+      0%   { transform: translateY(-10vh); }
+      100% { transform: translateY(110vh); }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="overlay-noise"></div>
+  <div class="snow" aria-hidden="true"></div>
+
+  <div class="card">
+    <div class="tree-container" id="tree">
+      <!-- 트리 이미지 -->
+      <img src="tree.png" class="tree" alt="26년 오월이들 소원트리" />
+      <div class="star-glow"></div>
+      <div class="hint">오너먼트를 눌러 소원을 확인해보세요 🎄</div>
+    </div>
+  </div>
+
+  <!-- 팝업 -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <h2 id="modal-owner"></h2>
+      <p id="modal-text"></p>
+      <button type="button" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    /* 🌟 여기만 수정하면 됨 */
+  const ornaments = [
+  { img:"orn1.png",  top:33, left:36, mTop:33, mLeft:38, owner:"은솔",  wish:"건강과 행복💓" },
+  { img:"orn2.png",  top:35, left:55, mTop:36, mLeft:56, owner:"수정",  wish:"26년 건강하고 원하는 바 다 이루고 행복, 사랑 가득한 한해 되길 ~ 🩷" },
+
+  { img:"orn3.png",  top:42, left:32, mTop:43, mLeft:34, owner:"규현",  wish:"내년에 우리 5월이들 한 명도 빠짐없이 다같이 본사에서 맛점하는날 오기를…", scale:0.75 },
+  { img:"orn4.png",  top:44, left:45, mTop:46, mLeft:45, owner:"규섭",  wish:"우리모두 빨리 강남에서 만나길!", scale:0.9 },
+  { img:"orn5.png",  top:42, left:68, mTop:44, mLeft:62, owner:"하람",  wish:"2026년 사랑하는 사람들 모두 건강하고 행복만 하길~~!!" },
+
+  { img:"orn6.png",  top:55, left:28, mTop:55, mLeft:30, owner:"가영",  wish:"적게 일하고 많이 벌래요! 롱디는 이제 그만 부산에서 살래요!" },
+  { img:"orn7.png",  top:55, left:55, mTop:55, mLeft:55, owner:"병협",  wish:"26년에는 더 강한 간을 갖게 해주세요" },
+  { img:"orn12.png", top:50, left:60, mTop:51, mLeft:58, owner:"민지", wish:"도전적이고 인상적인 경험을 쌓는 한해가 되길" },
+  { img:"orn15.png", top:53, left:75, mTop:53, mLeft:66, owner:"진화", wish:"- 26년에도 가족들, 동기들 모두 건강하게 해주세요." },
+
+  { img:"orn9.png",  top:65, left:23, mTop:64, mLeft:26, owner:"형창",  wish:"주식 대박나게 해주세요!" },
+  { img:"orn10.png", top:58, left:41, mTop:60, mLeft:42, owner:"동현", wish:"우리 가족 함께 행복하구 건강하게 지내기" },
+  { img:"orn11.png", top:62, left:68, mTop:62, mLeft:62, owner:"진우", wish:"울 동기들 결혼도 진급도 다 제때 잘 해서 무탈하고 행복하게 해주세요~" },
+
+  { img:"orn13.png", top:68, left:38, mTop:66, mLeft:39, owner:"용한", wish:"동기 모두 행복하게 해주세요 🙏🏻🙏🏻🙏🏻" },
+  { img:"orn14.png", top:69, left:55, mTop:67, mLeft:54, owner:"용현", wish:"건강, 행복, 사랑", scale:1.4 },
+  { img:"orn8.png",  top:67, left:75, mTop:66, mLeft:66, owner:"시은",  wish:"26년에는 모두모두 건강하고 행복하고 사이좋은 한 해가 되었으면 조켔습니다~~~" },
+
+  { img:"orn16.png", top:70, left:10, mTop:68, mLeft:18, owner:"혜림", wish:"동기들 모두 건강하고, 행복한 한해가 되기를!" }
+  ];
+
+
+    const tree = document.getElementById("tree");
+    const modal = document.getElementById("modal");
+    const modalOwner = document.getElementById("modal-owner");
+    const modalText = document.getElementById("modal-text");
+    
+    /* ❄️ 눈송이 6개(5~8개 범위) 아주 천천히 */
+    (function initSnow() {
+      const snowHost = document.querySelector(".snow");
+      if (!snowHost) return;
+
+      const count = 6; // ✅ 5~8 사이. 원하면 5~7로 조정 가능
+      for (let i = 0; i < count; i++) {
+        const flake = document.createElement("i");
+
+        // 랜덤 위치
+        flake.style.left = (Math.random() * 100) + "vw";
+
+        // 속도: 8초 이상 (8~14초)
+        const dur = 8 + Math.random() * 6;
+        flake.style.animationDuration = dur + "s";
+
+        // 시작 타이밍 분산 (처음부터 골고루 떨어지는 느낌)
+        flake.style.animationDelay = (-Math.random() * dur) + "s";
+
+        // 크기 아주 약간 랜덤
+        const size = 5 + Math.random() * 5; // 5~10px
+        flake.style.width = size + "px";
+        flake.style.height = size + "px";
+
+        // 살짝 좌우 흔들림 느낌(과하지 않게)
+        flake.style.transform = `translateX(${(Math.random() * 12 - 6).toFixed(1)}px)`;
+
+        snowHost.appendChild(flake);
+      }
+    })();
+
+
+    ornaments.forEach(o => {
+      const wrap = document.createElement("div");
+      wrap.className = "ornament";
+      const isMobile = window.matchMedia("(max-width: 520px)").matches;
+
+      const top = (isMobile && (o.mTop ?? o.mTop === 0)) ? o.mTop : o.top;
+      const left = (isMobile && (o.mLeft ?? o.mLeft === 0)) ? o.mLeft : o.left;
+
+      wrap.style.top = top + "%";
+      wrap.style.left = left + "%";
+
+      wrap.style.setProperty("--scale", o.scale ?? 1);
+
+      const img = document.createElement("img");
+      img.src = o.img;
+      img.alt = o.owner + "의 오너먼트";
+
+      wrap.appendChild(img);
+
+      wrap.onclick = () => {
+        // ✅ 클릭한 오너먼트 강조 (이전 active 제거)
+        document.querySelectorAll(".ornament.active").forEach(el => el.classList.remove("active"));
+        wrap.classList.add("active");
+
+        modalOwner.textContent = o.owner + "의 소원";
+        modalText.textContent = o.wish;
+        modal.style.display = "flex";
+
+        // ✅ 무음 진동(톡) 효과
+      wrap.classList.remove("tapped"); // 연타 시 재적용
+      void wrap.offsetWidth;           // reflow 트릭 (애니메이션 재시작)
+      wrap.classList.add("tapped");
+      setTimeout(() => wrap.classList.remove("tapped"), 140);
+  
+      };
+
+
+      // ✅ 오너먼트마다 흔들림 속도/딜레이 랜덤 (동시 흔들림 방지)
+    wrap.style.animationDuration = (3.2 + Math.random() * 2.0) + "s";
+    wrap.style.animationDelay = (-Math.random() * 3.0) + "s";
+
+
+      tree.appendChild(wrap);
+    });
+
+    function closeModal() {
+      modal.style.display = "none";
+      document.querySelectorAll(".ornament.active").forEach(el => el.classList.remove("active"));
+    }
+    
+    /* 배경 클릭 시 닫기 */
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+  </script>
+</body>
+</html>
